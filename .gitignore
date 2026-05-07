@@ -6,3 +6,5 @@ data/*.json
 .env
 .playwright-cli
 output
+logs
+launch-agents
