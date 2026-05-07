@@ -1,6 +1,6 @@
 # Registro Vivo
 
-App web/PWA para controlar documentos, alteracoes realizadas, pendencias, lembretes de reuniao e lixeira protegida.
+App web/PWA para controlar documentos, alteracoes realizadas, pendencias, pauta de reuniao e lixeira protegida.
 
 ## O que ele faz
 
@@ -9,7 +9,7 @@ App web/PWA para controlar documentos, alteracoes realizadas, pendencias, lembre
 - Lista de alteracoes por documento, com checklist verde quando concluido.
 - Reordenacao das alteracoes por arrastar e soltar ou pelos botoes de seta.
 - Lampada acesa quando todas as alteracoes do documento foram marcadas.
-- Campo de responsavel, contexto rapido e lembretes para a proxima reuniao.
+- Campo de responsavel e contexto rapido.
 - Historico das ultimas acoes.
 - Desfazer/refazer.
 - Salvamento automatico.

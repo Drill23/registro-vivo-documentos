@@ -18,7 +18,6 @@ const defaultState = {
   version: 1,
   updatedAt: new Date().toISOString(),
   documents: [],
-  reminders: [],
   activity: []
 };
 
@@ -79,8 +78,7 @@ function cleanupTrash(state) {
   const cutoff = Date.now() - trashTtlMs;
   return {
     ...state,
-    documents: state.documents.filter((doc) => !doc.deletedAt || new Date(doc.deletedAt).getTime() > cutoff),
-    reminders: state.reminders.filter((reminder) => !reminder.deletedAt || new Date(reminder.deletedAt).getTime() > cutoff)
+    documents: state.documents.filter((doc) => !doc.deletedAt || new Date(doc.deletedAt).getTime() > cutoff)
   };
 }
 
@@ -168,7 +166,6 @@ app.delete('/api/trash', requireAuth, async (req, res) => {
   }
   const state = await loadState();
   state.documents = state.documents.filter((doc) => !doc.deletedAt);
-  state.reminders = state.reminders.filter((reminder) => !reminder.deletedAt);
   pushActivity(state, 'trash_emptied');
   res.json(await saveState(state));
 });

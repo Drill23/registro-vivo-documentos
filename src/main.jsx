@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client';
 import {
   ArchiveRestore,
-  Bell,
   Check,
   ChevronDown,
   Circle,
@@ -18,7 +17,6 @@ import {
   Redo2,
   RotateCcw,
   Search,
-  Send,
   Trash2,
   Undo2,
   X
@@ -33,7 +31,6 @@ const emptyState = {
   version: 1,
   updatedAt: new Date().toISOString(),
   documents: [],
-  reminders: [],
   activity: []
 };
 
@@ -291,25 +288,6 @@ function App() {
     });
   }
 
-  function addReminder(payload) {
-    const reminder = {
-      id: uid('rem'),
-      text: payload.text.trim(),
-      documentId: payload.documentId || '',
-      dueDate: payload.dueDate || '',
-      done: false,
-      createdAt: isoNow(),
-      updatedAt: isoNow(),
-      deletedAt: null
-    };
-    if (!reminder.text) return;
-    commit(
-      (current) => ({ ...current, reminders: [reminder, ...current.reminders] }),
-      'reminder_created',
-      { text: reminder.text }
-    );
-  }
-
   function emptyTrash(passwordValue) {
     api('/api/trash', {
       method: 'DELETE',
@@ -324,8 +302,7 @@ function App() {
           commit(
             (current) => ({
               ...current,
-              documents: current.documents.filter((doc) => !doc.deletedAt),
-              reminders: current.reminders.filter((reminder) => !reminder.deletedAt)
+              documents: current.documents.filter((doc) => !doc.deletedAt)
             }),
             'trash_emptied'
           );
@@ -394,18 +371,15 @@ function App() {
           {selected ? (
             <DocumentDetail
               doc={selected}
-              reminders={state.reminders.filter((reminder) => reminder.documentId === selected.id && !reminder.deletedAt)}
               patchDocument={patchDocument}
               moveTask={moveTask}
-              addReminder={addReminder}
             />
           ) : (
             <BlankState onAdd={() => setWizardOpen(true)} />
           )}
         </section>
 
-        <aside className="right-rail" aria-label="Lembretes e historico">
-          <ReminderPanel documents={state.documents.filter((doc) => !doc.deletedAt)} reminders={state.reminders} addReminder={addReminder} commit={commit} />
+        <aside className="right-rail" aria-label="Historico">
           <ActivityPanel activity={state.activity} />
           {filter === 'trash' && (
             <button className="danger full" onClick={() => setTrashPasswordOpen(true)}>
@@ -488,7 +462,7 @@ function IconButton({ label, icon: Icon, ...props }) {
   );
 }
 
-function DocumentDetail({ doc, reminders, patchDocument, moveTask, addReminder }) {
+function DocumentDetail({ doc, patchDocument, moveTask }) {
   const [newTask, setNewTask] = useState('');
   const [draggingTask, setDraggingTask] = useState(null);
   const sortedTasks = [...(doc.tasks || [])].sort((a, b) => a.order - b.order);
@@ -638,13 +612,6 @@ function DocumentDetail({ doc, reminders, patchDocument, moveTask, addReminder }
         </div>
       </section>
 
-      <section className="linked-reminders">
-        <h2>Lembretes deste documento</h2>
-        {reminders.map((reminder) => <span className="reminder-pill" key={reminder.id}><Bell size={15} />{reminder.text}</span>)}
-        {!reminders.length && <p className="muted">Nenhum lembrete vinculado ainda.</p>}
-        <QuickReminder doc={doc} addReminder={addReminder} />
-      </section>
-
       {doc.deletedAt ? (
         <button
           className="primary"
@@ -666,89 +633,12 @@ function DocumentDetail({ doc, reminders, patchDocument, moveTask, addReminder }
   );
 }
 
-function QuickReminder({ doc, addReminder }) {
-  const [text, setText] = useState('');
-  return (
-    <div className="quick-reminder">
-      <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Lembrar para a proxima reuniao" />
-      <button
-        onClick={() => {
-          addReminder({ text, documentId: doc.id });
-          setText('');
-        }}
-      >
-        <Send size={16} />
-      </button>
-    </div>
-  );
-}
-
-function ReminderPanel({ documents, reminders, addReminder, commit }) {
-  const [text, setText] = useState('');
-  const [documentId, setDocumentId] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const active = reminders.filter((reminder) => !reminder.deletedAt);
-
-  return (
-    <section className="rail-panel">
-      <div className="section-title">
-        <h2>Lembretes</h2>
-        <Bell size={18} />
-      </div>
-      <div className="reminder-form">
-        <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Proxima correcao" />
-        <select value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
-          <option value="">Sem documento</option>
-          {documents.map((doc) => <option value={doc.id} key={doc.id}>{doc.title}</option>)}
-        </select>
-        <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-        <button
-          className="primary"
-          onClick={() => {
-            addReminder({ text, documentId, dueDate });
-            setText('');
-            setDocumentId('');
-            setDueDate('');
-          }}
-        >
-          <Plus size={17} />
-          Adicionar
-        </button>
-      </div>
-      <div className="reminder-list">
-        {active.slice(0, 8).map((reminder) => (
-          <label className={`reminder ${reminder.done ? 'done' : ''}`} key={reminder.id}>
-            <input
-              type="checkbox"
-              checked={reminder.done}
-              onChange={() =>
-                commit(
-                  (current) => ({
-                    ...current,
-                    reminders: current.reminders.map((item) => item.id === reminder.id ? { ...item, done: !item.done, updatedAt: isoNow() } : item)
-                  }),
-                  'reminder_updated'
-                )
-              }
-            />
-            <span>{reminder.text}</span>
-            <small>{formatShortDate(reminder.dueDate)}</small>
-          </label>
-        ))}
-        {!active.length && <p className="muted">Sem lembretes pendentes.</p>}
-      </div>
-    </section>
-  );
-}
-
 function ActivityPanel({ activity }) {
   const labels = {
     document_created: 'Documento criado',
     document_updated: 'Documento atualizado',
     document_deleted: 'Movido para lixeira',
     document_restored: 'Documento restaurado',
-    reminder_created: 'Lembrete criado',
-    reminder_updated: 'Lembrete atualizado',
     trash_emptied: 'Lixeira limpa'
   };
   return (

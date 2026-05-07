@@ -88,8 +88,7 @@ h2 {
 .meta-line,
 .section-title,
 .modal-actions,
-.chips,
-.linked-reminders {
+.chips {
   align-items: center;
   display: flex;
 }
@@ -97,8 +96,7 @@ h2 {
 .stats,
 .toolbar,
 .filters,
-.chips,
-.linked-reminders {
+.chips {
   gap: 8px;
 }
 
@@ -138,8 +136,6 @@ h2 {
 .icon-button,
 .filters button,
 .ghost,
-.reminder-form button,
-.quick-reminder button,
 .order-buttons button,
 .modal-actions button {
   align-items: center;
@@ -396,10 +392,7 @@ label input,
 label select,
 .wizard-fields input,
 .wizard-fields select,
-.small-modal input,
-.reminder-form input,
-.reminder-form select,
-.quick-reminder input {
+.small-modal input {
   background: #f8f7f2;
   border: 1px solid rgba(29, 42, 46, 0.1);
   border-radius: 8px;
@@ -407,8 +400,7 @@ label select,
 }
 
 .task-panel,
-.meeting-strip,
-.linked-reminders {
+.meeting-strip {
   background: #fbfaf6;
   border: 1px solid rgba(29, 42, 46, 0.09);
   border-radius: 8px;
@@ -488,14 +480,12 @@ label select,
   color: #66767a;
 }
 
-.chips,
-.linked-reminders {
+.chips {
   align-items: flex-start;
   flex-wrap: wrap;
 }
 
-.chip,
-.reminder-pill {
+.chip {
   align-items: center;
   background: #edf2f3;
   border-radius: 999px;
@@ -512,19 +502,6 @@ label select,
   color: #27643e;
 }
 
-.quick-reminder {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.quick-reminder button {
-  background: #1d2a2e;
-  color: #fff;
-  flex: 0 0 42px;
-  padding: 0;
-}
-
 .right-rail {
   display: grid;
   gap: 12px;
@@ -533,36 +510,6 @@ label select,
 
 .rail-panel {
   padding: 14px;
-}
-
-.reminder-form {
-  display: grid;
-  gap: 8px;
-}
-
-.reminder-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.reminder {
-  align-items: center;
-  background: #fbfaf6;
-  border: 1px solid rgba(29, 42, 46, 0.08);
-  border-radius: 8px;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
-  padding: 10px;
-}
-
-.reminder.done span {
-  text-decoration: line-through;
-}
-
-.reminder small {
-  color: #66767a;
 }
 
 .timeline {
