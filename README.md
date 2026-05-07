@@ -34,7 +34,18 @@ Se a interface for aberta sem servidor, ela entra em modo local e salva no naveg
 
 ## Publicacao
 
-GitHub Pages hospeda apenas arquivos estaticos. Ele consegue publicar a tela do app, mas nao consegue manter um banco compartilhado sozinho. Para sincronizacao real, hospede este projeto em um servico que rode Node, como Render, Railway, Fly.io ou uma VPS pequena, usando:
+GitHub Pages hospeda apenas arquivos estaticos. Ele consegue publicar a tela do app, mas nao consegue manter um banco compartilhado sozinho.
+
+Para testar com outra pessoa sem configurar hospedagem permanente, deixe o servidor local rodando e abra um tunel publico:
+
+```bash
+npm run preview
+npm run share
+```
+
+O comando `npm run share` mostra um link `trycloudflare.com`. Enquanto o Mac estiver ligado e esses comandos estiverem rodando, outra pessoa consegue usar o mesmo app pelo link.
+
+Para uma publicacao permanente, use um servico que rode Node, como Render, Railway, Fly.io ou uma VPS pequena, usando:
 
 ```bash
 npm install
@@ -43,3 +54,5 @@ APP_PASSWORD=admin npm run preview
 ```
 
 Em hospedagem real, defina tambem `APP_SECRET` com uma frase longa e privada.
+
+Este repositorio inclui `render.yaml` para facilitar deploy no Render.

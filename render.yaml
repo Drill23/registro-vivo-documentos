@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: registro-vivo-documentos
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: APP_PASSWORD=admin node server/index.js
+    envVars:
+      - key: APP_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
