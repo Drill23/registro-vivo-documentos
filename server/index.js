@@ -76,9 +76,10 @@ async function saveState(state) {
 
 function cleanupTrash(state) {
   const cutoff = Date.now() - trashTtlMs;
+  const { reminders: _reminders, ...rest } = state;
   return {
-    ...state,
-    documents: state.documents.filter((doc) => !doc.deletedAt || new Date(doc.deletedAt).getTime() > cutoff)
+    ...rest,
+    documents: (state.documents || []).filter((doc) => !doc.deletedAt || new Date(doc.deletedAt).getTime() > cutoff)
   };
 }
 
