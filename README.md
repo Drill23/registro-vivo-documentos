@@ -17,16 +17,6 @@ App web/PWA para controlar documentos, alteracoes realizadas, pendencias, lembre
 - Limpeza automatica da lixeira apos 30 dias.
 - Layout responsivo para computador e celular.
 
-## Status
-
-O projeto completo ja esta pronto localmente no Mac em `/Users/adrianoalmeida/Documents/Codex/2026-05-06/preciso-de-uma-ajuda-sua-eu`.
-
-O push completo via GitHub CLI ficou aguardando confirmacao de seguranca no GitHub Mobile. Depois de autorizar o GitHub CLI, rode:
-
-```bash
-git push -u origin main
-```
-
 ## Como rodar localmente
 
 ```bash
@@ -40,4 +30,16 @@ Abra `http://localhost:5173`.
 
 Quando o servidor Node esta rodando, os dados ficam no arquivo `data/registro-vivo.json`. Esse e o modo certo para duas pessoas compartilharem os mesmos registros, desde que o servidor esteja hospedado em um ambiente acessivel pelas duas.
 
-Se a interface for aberta sem servidor, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre duas pessoas.
+Se a interface for aberta sem servidor, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre voce e a Maria.
+
+## Publicacao
+
+GitHub Pages hospeda apenas arquivos estaticos. Ele consegue publicar a tela do app, mas nao consegue manter um banco compartilhado sozinho. Para sincronizacao real, hospede este projeto em um servico que rode Node, como Render, Railway, Fly.io ou uma VPS pequena, usando:
+
+```bash
+npm install
+npm run build
+APP_PASSWORD=admin npm run preview
+```
+
+Em hospedagem real, defina tambem `APP_SECRET` com uma frase longa e privada.
