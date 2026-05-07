@@ -11,6 +11,8 @@ const dataDir = path.join(rootDir, 'data');
 const dbPath = process.env.DB_PATH || path.join(dataDir, 'registro-vivo.json');
 const appPassword = process.env.APP_PASSWORD || 'admin';
 const sessionSecret = process.env.APP_SECRET || crypto.randomBytes(32).toString('hex');
+const sheetsWebAppUrl = process.env.SHEETS_WEB_APP_URL || '';
+const sheetsSecret = process.env.SHEETS_SECRET || appPassword;
 const port = Number(process.env.PORT || 4174);
 const trashTtlMs = 30 * 24 * 60 * 60 * 1000;
 
@@ -55,6 +57,11 @@ async function ensureDb() {
 }
 
 async function loadState() {
+  if (sheetsWebAppUrl) {
+    const remote = await loadSheetsState();
+    await saveLocalState(remote);
+    return remote;
+  }
   await ensureDb();
   const raw = await fs.readFile(dbPath, 'utf8');
   const state = JSON.parse(raw);
@@ -67,11 +74,49 @@ async function saveState(state) {
     ...state,
     updatedAt: now()
   });
+  if (sheetsWebAppUrl) {
+    const remote = await saveSheetsState(clean);
+    await saveLocalState(remote);
+    return remote;
+  }
+  return saveLocalState(clean);
+}
+
+async function saveLocalState(state) {
   const tmpPath = `${dbPath}.tmp`;
   await fs.mkdir(path.dirname(dbPath), { recursive: true });
-  await fs.writeFile(tmpPath, JSON.stringify(clean, null, 2));
+  await fs.writeFile(tmpPath, JSON.stringify(state, null, 2));
   await fs.rename(tmpPath, dbPath);
-  return clean;
+  return state;
+}
+
+async function loadSheetsState() {
+  const result = await callSheetsApi({ action: 'getState' });
+  return cleanupTrash({ ...defaultState, ...(result.state || {}) });
+}
+
+async function saveSheetsState(state) {
+  const result = await callSheetsApi({ action: 'saveState', state });
+  return cleanupTrash({ ...defaultState, ...(result.state || state) });
+}
+
+async function callSheetsApi(payload) {
+  const response = await fetch(sheetsWebAppUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ secret: sheetsSecret, ...payload })
+  });
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`sheets_invalid_response:${text.slice(0, 120)}`);
+  }
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.error || `sheets_http_${response.status}`);
+  }
+  return data;
 }
 
 function cleanupTrash(state) {

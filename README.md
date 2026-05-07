@@ -28,7 +28,21 @@ Abra `http://localhost:5173`.
 
 ## Como funciona o armazenamento
 
-Quando o servidor Node esta rodando, os dados ficam no arquivo `data/registro-vivo.json`. Esse e o modo certo para duas pessoas compartilharem os mesmos registros, desde que o servidor esteja hospedado em um ambiente acessivel pelas duas.
+Quando o servidor Node esta rodando, os dados ficam no arquivo `data/registro-vivo.json`.
+
+Para duas pessoas usarem o mesmo banco sem depender do computador de uma delas, configure o modo Google Sheets:
+
+1. Abra `apps-script/README.md`.
+2. Crie a planilha e publique o Apps Script como Web App.
+3. Configure o servidor com:
+
+```bash
+SHEETS_WEB_APP_URL=https://script.google.com/macros/s/.../exec
+SHEETS_SECRET=admin
+APP_PASSWORD=admin
+```
+
+Nesse modo, o Google Sheets vira a fonte principal de dados. A lixeira e a limpeza continuam sendo controladas pelo app.
 
 Se a interface for aberta sem servidor, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre voce e a Maria.
 
