@@ -18,7 +18,7 @@ function doGet(event) {
   if (event && event.parameter && event.parameter.api === '1') {
     return jsonResponse({
       ok: true,
-      name: 'Registro Vivo Sheets API',
+      name: 'Registros de Documentos Sheets API',
       actions: ['setup', 'getState', 'saveState']
     });
   }
@@ -26,7 +26,7 @@ function doGet(event) {
   setupWorkbook();
   return HtmlService
     .createHtmlOutputFromFile('Index')
-    .setTitle('Registro Vivo')
+    .setTitle('Registros de Documentos')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 

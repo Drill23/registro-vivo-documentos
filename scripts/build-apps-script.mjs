@@ -25,7 +25,7 @@ for (const [, src] of scriptTags) {
   const chunks = encoded.match(/.{1,8000}/g) || [];
   html = html.replace(
     `<script type="module" crossorigin src="${src}"></script>`,
-    `<script>\nconst script = document.createElement('script');\nscript.type = 'module';\nscript.textContent = atob(${JSON.stringify(chunks)}.join(''));\ndocument.head.appendChild(script);\n</script>`
+    `<script>\nconst script = document.createElement('script');\nconst binary = atob(${JSON.stringify(chunks)}.join(''));\nconst bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));\nscript.type = 'module';\nscript.textContent = new TextDecoder().decode(bytes);\ndocument.head.appendChild(script);\n</script>`
   );
 }
 

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  ArchiveRestore,
+  ArrowDown,
+  ArrowUp,
   Check,
   ChevronDown,
   Circle,
@@ -13,6 +14,7 @@ import {
   ListPlus,
   Lock,
   LogOut,
+  Pencil,
   Plus,
   Redo2,
   RotateCcw,
@@ -425,6 +427,13 @@ function App() {
             ))}
             {!visibleDocs.length && <div className="empty">Nada por aqui ainda.</div>}
           </div>
+
+          {filter === 'trash' && (
+            <button className="danger full trash-action" onClick={() => setTrashPasswordOpen(true)}>
+              <Trash2 size={17} />
+              Esvaziar lixeira
+            </button>
+          )}
         </aside>
 
         <section className="detail">
@@ -439,15 +448,6 @@ function App() {
           )}
         </section>
 
-        <aside className="right-rail" aria-label="Historico">
-          <ActivityPanel activity={state.activity} />
-          {filter === 'trash' && (
-            <button className="danger full" onClick={() => setTrashPasswordOpen(true)}>
-              <Trash2 size={17} />
-              Esvaziar lixeira
-            </button>
-          )}
-        </aside>
       </section>
 
       {wizardOpen && <CreateWizard onClose={() => setWizardOpen(false)} onCreate={createDocument} />}
@@ -461,7 +461,7 @@ function Login({ password, setPassword, login, error }) {
     <main className="login-screen">
       <section className="login-panel">
         <div className="brand-mark"><FileText size={30} /></div>
-        <h1>Registro Vivo</h1>
+        <h1>Registros de Documentos</h1>
         <p>Controle compartilhado para documentos, alteracoes, pendencias e reunioes.</p>
         <form onSubmit={login}>
           <label>
@@ -484,7 +484,7 @@ function Header({ syncMode, activeCount, pendingCount, doneCount, onAdd, onUndo,
     <header className="topbar">
       <div>
         <span className="eyebrow">Controle de documentos</span>
-        <h1>Registro Vivo</h1>
+        <h1>Registros de Documentos</h1>
       </div>
       <div className="stats">
         <Stat label="ativos" value={activeCount} />
@@ -621,18 +621,14 @@ function DocumentDetail({ doc, patchDocument, moveTask }) {
               >
                 {task.done ? <Check size={18} /> : <Circle size={18} />}
               </button>
-              <input
-                value={task.text}
-                onChange={(event) =>
-                  patchDocument(doc.id, (current) => ({
-                    ...current,
-                    tasks: current.tasks.map((item) => item.id === task.id ? { ...item, text: event.target.value, updatedAt: isoNow() } : item)
-                  }))
-                }
-              />
+              <EditableTaskText docId={doc.id} task={task} patchDocument={patchDocument} />
               <div className="order-buttons">
-                <button disabled={index === 0} onClick={() => moveTask(doc.id, task.id, -1)}>↑</button>
-                <button disabled={index === sortedTasks.length - 1} onClick={() => moveTask(doc.id, task.id, 1)}>↓</button>
+                <button title="Subir" aria-label="Subir item" disabled={index === 0} onClick={() => moveTask(doc.id, task.id, -1)}>
+                  <ArrowUp size={15} />
+                </button>
+                <button title="Descer" aria-label="Descer item" disabled={index === sortedTasks.length - 1} onClick={() => moveTask(doc.id, task.id, 1)}>
+                  <ArrowDown size={15} />
+                </button>
               </div>
               <button
                 className="ghost"
@@ -693,30 +689,25 @@ function DocumentDetail({ doc, patchDocument, moveTask }) {
   );
 }
 
-function ActivityPanel({ activity }) {
-  const labels = {
-    document_created: 'Documento criado',
-    document_updated: 'Documento atualizado',
-    document_deleted: 'Movido para lixeira',
-    document_restored: 'Documento restaurado',
-    trash_emptied: 'Lixeira limpa'
-  };
+function EditableTaskText({ docId, task, patchDocument }) {
+  const inputRef = useRef(null);
   return (
-    <section className="rail-panel">
-      <div className="section-title">
-        <h2>Historico</h2>
-        <ArchiveRestore size={18} />
-      </div>
-      <div className="timeline">
-        {(activity || []).slice(0, 7).map((item) => (
-          <div key={item.id}>
-            <strong>{labels[item.action] || item.action}</strong>
-            <span>{formatShortDate(item.createdAt)}</span>
-          </div>
-        ))}
-        {!activity?.length && <p className="muted">O historico aparece aqui.</p>}
-      </div>
-    </section>
+    <div className="task-text-editor">
+      <input
+        ref={inputRef}
+        value={task.text}
+        aria-label="Editar alteracao"
+        onChange={(event) =>
+          patchDocument(docId, (current) => ({
+            ...current,
+            tasks: current.tasks.map((item) => item.id === task.id ? { ...item, text: event.target.value, updatedAt: isoNow() } : item)
+          }))
+        }
+      />
+      <button className="ghost edit-task-button" title="Editar" aria-label="Editar alteracao" onClick={() => inputRef.current?.focus()}>
+        <Pencil size={15} />
+      </button>
+    </div>
   );
 }
 
@@ -815,10 +806,16 @@ function CreateWizard({ onClose, onCreate }) {
                   onDrop={() => drop(index)}
                 >
                   <GripVertical size={17} />
-                  <span>{task}</span>
+                  <input
+                    value={task}
+                    aria-label="Editar alteracao"
+                    onChange={(event) =>
+                      setTasks((items) => items.map((item, itemIndex) => itemIndex === index ? event.target.value : item))
+                    }
+                  />
                   <div className="order-buttons">
-                    <button onClick={() => move(index, -1)}>↑</button>
-                    <button onClick={() => move(index, 1)}>↓</button>
+                    <button title="Subir" aria-label="Subir item" onClick={() => move(index, -1)}><ArrowUp size={15} /></button>
+                    <button title="Descer" aria-label="Descer item" onClick={() => move(index, 1)}><ArrowDown size={15} /></button>
                   </div>
                   <button className="ghost" onClick={() => setTasks((items) => items.filter((_, itemIndex) => itemIndex !== index))}><X size={16} /></button>
                 </div>

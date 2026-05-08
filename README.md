@@ -1,4 +1,4 @@
-# Registro Vivo
+# Registros de Documentos
 
 App web/PWA para controlar documentos, alteracoes realizadas, pendencias, pauta de reuniao e lixeira protegida.
 
@@ -10,7 +10,6 @@ App web/PWA para controlar documentos, alteracoes realizadas, pendencias, pauta 
 - Reordenacao das alteracoes por arrastar e soltar ou pelos botoes de seta.
 - Lampada acesa quando todas as alteracoes do documento foram marcadas.
 - Campo de responsavel e contexto rapido.
-- Historico das ultimas acoes.
 - Desfazer/refazer.
 - Salvamento automatico.
 - Lixeira com restauracao e esvaziamento protegido pela senha.
@@ -38,7 +37,7 @@ Para atualizar a versao publicada no Apps Script:
 npm run build:apps-script
 cd apps-script
 npx @google/clasp push --force
-npx @google/clasp deploy -d "Registro Vivo"
+npx @google/clasp deploy -d "Registros de Documentos"
 ```
 
 Se a interface for aberta fora do Apps Script e sem servidor Node, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre voce e a Maria.
