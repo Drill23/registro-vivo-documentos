@@ -131,6 +131,10 @@ h2 {
   justify-content: flex-end;
 }
 
+.mobile-switch {
+  display: none;
+}
+
 .primary,
 .danger,
 .icon-button,
@@ -444,7 +448,8 @@ label select,
   min-height: 38px;
 }
 
-.edit-task-button {
+.edit-task-button,
+.delete-task-button {
   height: 34px;
   min-height: 34px;
   padding: 0;
@@ -641,44 +646,187 @@ label select,
 }
 
 @media (max-width: 820px) {
+  body {
+    background: #f7f4ef;
+  }
+
   .shell {
-    padding: 12px;
+    background:
+      linear-gradient(180deg, rgba(105, 181, 120, 0.18), transparent 190px),
+      #f7f4ef;
+    min-height: 100dvh;
+    padding: max(14px, env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));
   }
 
   .topbar {
+    align-items: start;
+    gap: 12px;
     grid-template-columns: 1fr;
+    margin-bottom: 12px;
+    max-width: none;
   }
 
-  .stats,
+  .topbar h1 {
+    font-size: 2rem;
+    line-height: 1.03;
+    max-width: 12ch;
+  }
+
+  .stats {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .stat {
+    border-radius: 18px;
+    min-width: 0;
+    padding: 11px 12px;
+  }
+
+  .stat strong {
+    font-size: 1.28rem;
+  }
+
   .toolbar {
-    justify-content: start;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    backdrop-filter: blur(18px);
+    background: rgba(247, 244, 239, 0.88);
+    border: 1px solid rgba(29, 42, 46, 0.1);
+    border-radius: 26px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 18px 42px rgba(29, 42, 46, 0.2);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 48px 48px minmax(112px, 1fr) 48px;
+    left: 14px;
+    padding: 8px;
+    position: fixed;
+    right: 14px;
+    z-index: 30;
   }
 
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .detail {
-    min-height: auto;
-  }
-
-  .field-grid,
-  .task {
-    grid-template-columns: 1fr;
-  }
-
-  .task {
-    align-items: stretch;
-  }
-
-  .task > svg {
+  .toolbar .sync {
     display: none;
   }
 
-  .order-buttons {
-    justify-content: flex-start;
+  .toolbar .icon-button,
+  .toolbar .primary {
+    border-radius: 18px;
+    min-height: 48px;
+  }
+
+  .toolbar .icon-button {
+    width: 48px;
+  }
+
+  .toolbar .primary {
+    width: 100%;
+  }
+
+  .mobile-switch {
+    background: rgba(255, 255, 255, 0.66);
+    border: 1px solid rgba(29, 42, 46, 0.08);
+    border-radius: 20px;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 12px;
+    padding: 6px;
+  }
+
+  .mobile-switch button {
+    align-items: center;
+    background: transparent;
+    border-radius: 15px;
+    color: #536266;
+    display: inline-flex;
+    font-weight: 800;
+    gap: 8px;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .mobile-switch button.active {
+    background: #1d2a2e;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(29, 42, 46, 0.18);
+  }
+
+  .mobile-switch button:disabled {
+    opacity: 0.4;
+  }
+
+  .workspace {
+    display: block;
+    max-width: none;
+  }
+
+  .mobile-detail .sidebar,
+  .mobile-list .detail {
+    display: none;
+  }
+
+  .sidebar {
+    display: grid;
+    gap: 12px;
+  }
+
+  .searchbox {
+    border-radius: 18px;
+    min-height: 54px;
+  }
+
+  .filters {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .filters button {
+    border-radius: 17px;
+    flex: none;
+    font-weight: 800;
+    min-height: 48px;
+  }
+
+  .doc-list {
+    gap: 12px;
+  }
+
+  .doc-card {
+    border-radius: 22px;
+    min-height: 128px;
+    padding: 18px 18px 18px 20px;
+  }
+
+  .doc-card strong {
+    font-size: 1.12rem;
+  }
+
+  .detail {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .doc-detail {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .detail-head,
+  .field-grid,
+  .task-panel,
+  .meeting-strip {
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(29, 42, 46, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 18px 42px rgba(29, 42, 46, 0.1);
+    padding: 16px;
   }
 
   .detail-head {
@@ -686,7 +834,138 @@ label select,
   }
 
   .title-input {
-    font-size: 1.65rem;
+    font-size: 2rem;
+  }
+
+  .big-lamp {
+    border-radius: 18px;
+    height: 54px;
+    width: 54px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  label input,
+  label select,
+  .wizard-fields input,
+  .wizard-fields select,
+  .small-modal input {
+    border-radius: 16px;
+    min-height: 52px;
+  }
+
+  .task-panel,
+  .meeting-strip {
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .task-list {
+    gap: 10px;
+  }
+
+  .task {
+    align-items: center;
+    border-radius: 20px;
+    gap: 10px;
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    grid-template-areas:
+      "check text text"
+      "moves moves delete";
+    min-height: 0;
+    padding: 10px;
+  }
+
+  .task > svg {
+    display: none;
+  }
+
+  .check-button {
+    grid-area: check;
+    height: 48px;
+    width: 48px;
+  }
+
+  .task-text-editor {
+    grid-area: text;
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .task-text-editor input {
+    font-size: 1rem;
+    min-height: 48px;
+  }
+
+  .edit-task-button,
+  .delete-task-button {
+    border-radius: 15px;
+    height: 44px;
+    min-height: 44px;
+    width: 44px;
+  }
+
+  .delete-task-button {
+    grid-area: delete;
+  }
+
+  .order-buttons {
+    grid-area: moves;
+    justify-content: stretch;
+  }
+
+  .order-buttons button {
+    border-radius: 14px;
+    flex: 1;
+    height: 42px;
+    min-height: 42px;
+    width: auto;
+  }
+
+  .task.add-task {
+    grid-template-columns: minmax(0, 1fr) 52px;
+    grid-template-areas: "input add";
+  }
+
+  .task.add-task > svg {
+    display: none;
+  }
+
+  .task.add-task input {
+    grid-area: input;
+    min-height: 52px;
+  }
+
+  .task.add-task .compact {
+    border-radius: 16px;
+    grid-area: add;
+    height: 52px;
+    min-height: 52px;
+    width: 52px;
+  }
+
+  .chips {
+    gap: 8px;
+  }
+
+  .chip {
+    border-radius: 14px;
+    font-size: 0.92rem;
+    padding: 10px 12px;
+  }
+
+  .doc-detail > .danger,
+  .doc-detail > .primary {
+    border-radius: 18px;
+    min-height: 52px;
+  }
+
+  .modal {
+    border-radius: 24px;
+  }
+
+  .compact-list .task {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
   }
 }
 

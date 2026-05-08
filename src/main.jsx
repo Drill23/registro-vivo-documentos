@@ -11,6 +11,7 @@ import {
   Filter,
   GripVertical,
   Lightbulb,
+  List,
   ListPlus,
   Lock,
   LogOut,
@@ -141,6 +142,7 @@ function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('active');
+  const [mobileView, setMobileView] = useState('detail');
   const [syncMode, setSyncMode] = useState('carregando');
   const [wizardOpen, setWizardOpen] = useState(false);
   const [trashPasswordOpen, setTrashPasswordOpen] = useState(false);
@@ -176,6 +178,10 @@ function App() {
   const activeCount = state.documents.filter((doc) => !doc.deletedAt).length;
   const pendingCount = state.documents.filter((doc) => !doc.deletedAt && !isComplete(doc)).length;
   const doneCount = state.documents.filter((doc) => !doc.deletedAt && isComplete(doc)).length;
+
+  useEffect(() => {
+    if (!selected) setMobileView('list');
+  }, [selected]);
 
   useEffect(() => {
     async function load() {
@@ -377,19 +383,34 @@ function App() {
     return <Login password={password} setPassword={setPassword} login={login} error={loginError} />;
   }
 
+  function openWizard() {
+    setWizardOpen(true);
+  }
+
+  function selectDocument(docId) {
+    setSelectedId(docId);
+    setMobileView('detail');
+  }
+
   return (
-    <main className="shell">
+    <main className={`shell mobile-${mobileView}`}>
       <Header
         syncMode={syncMode}
         activeCount={activeCount}
         pendingCount={pendingCount}
         doneCount={doneCount}
-        onAdd={() => setWizardOpen(true)}
+        onAdd={openWizard}
         onUndo={undo}
         onRedo={redo}
         canUndo={history.length > 0}
         canRedo={future.length > 0}
         onLogout={logout}
+      />
+
+      <MobileSwitch
+        mobileView={mobileView}
+        setMobileView={setMobileView}
+        hasSelected={Boolean(selected)}
       />
 
       <section className="workspace">
@@ -415,7 +436,7 @@ function App() {
 
           <div className="doc-list">
             {visibleDocs.map((doc) => (
-              <button className={`doc-card ${selected?.id === doc.id ? 'selected' : ''}`} key={doc.id} onClick={() => setSelectedId(doc.id)}>
+              <button className={`doc-card ${selected?.id === doc.id ? 'selected' : ''}`} key={doc.id} onClick={() => selectDocument(doc.id)}>
                 <span className="doc-accent" style={{ background: doc.color }} />
                 <span className="doc-title-row">
                   <strong>{doc.title}</strong>
@@ -444,7 +465,7 @@ function App() {
               moveTask={moveTask}
             />
           ) : (
-            <BlankState onAdd={() => setWizardOpen(true)} />
+            <BlankState onAdd={openWizard} />
           )}
         </section>
 
@@ -502,6 +523,21 @@ function Header({ syncMode, activeCount, pendingCount, doneCount, onAdd, onUndo,
         <IconButton label="Sair" icon={LogOut} onClick={onLogout} />
       </div>
     </header>
+  );
+}
+
+function MobileSwitch({ mobileView, setMobileView, hasSelected }) {
+  return (
+    <nav className="mobile-switch" aria-label="Navegacao movel">
+      <button className={mobileView === 'list' ? 'active' : ''} onClick={() => setMobileView('list')}>
+        <List size={20} />
+        Documentos
+      </button>
+      <button className={mobileView === 'detail' ? 'active' : ''} disabled={!hasSelected} onClick={() => setMobileView('detail')}>
+        <FileText size={20} />
+        Registro
+      </button>
+    </nav>
   );
 }
 
@@ -631,7 +667,7 @@ function DocumentDetail({ doc, patchDocument, moveTask }) {
                 </button>
               </div>
               <button
-                className="ghost"
+                className="ghost delete-task-button"
                 onClick={() =>
                   patchDocument(doc.id, (current) => ({
                     ...current,
@@ -817,7 +853,7 @@ function CreateWizard({ onClose, onCreate }) {
                     <button title="Subir" aria-label="Subir item" onClick={() => move(index, -1)}><ArrowUp size={15} /></button>
                     <button title="Descer" aria-label="Descer item" onClick={() => move(index, 1)}><ArrowDown size={15} /></button>
                   </div>
-                  <button className="ghost" onClick={() => setTasks((items) => items.filter((_, itemIndex) => itemIndex !== index))}><X size={16} /></button>
+                  <button className="ghost delete-task-button" onClick={() => setTasks((items) => items.filter((_, itemIndex) => itemIndex !== index))}><X size={16} /></button>
                 </div>
               ))}
             </div>
