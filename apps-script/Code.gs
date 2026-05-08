@@ -3,6 +3,9 @@ const DOCUMENTS_SHEET = 'Documents';
 const TASKS_SHEET = 'Tasks';
 const ACTIVITY_SHEET = 'Activity';
 const DEFAULT_SECRET = 'admin';
+const DEFAULT_APP_PASSWORD = 'admin';
+const SESSION_TTL_SECONDS = 21600;
+const TRASH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const DEFAULT_STATE = {
   version: 1,
@@ -11,12 +14,20 @@ const DEFAULT_STATE = {
   activity: []
 };
 
-function doGet() {
-  return jsonResponse({
-    ok: true,
-    name: 'Registro Vivo Sheets API',
-    actions: ['setup', 'getState', 'saveState']
-  });
+function doGet(event) {
+  if (event && event.parameter && event.parameter.api === '1') {
+    return jsonResponse({
+      ok: true,
+      name: 'Registro Vivo Sheets API',
+      actions: ['setup', 'getState', 'saveState']
+    });
+  }
+
+  setupWorkbook();
+  return HtmlService
+    .createHtmlOutputFromFile('Index')
+    .setTitle('Registro Vivo')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function doPost(event) {
@@ -31,12 +42,15 @@ function doPost(event) {
 
     if (body.action === 'getState') {
       setupWorkbook();
-      return jsonResponse({ ok: true, state: readState() });
+      const state = cleanupTrash(readState());
+      writeState(state);
+      mirrorReadableSheets(state);
+      return jsonResponse({ ok: true, state });
     }
 
     if (body.action === 'saveState') {
       setupWorkbook();
-      const state = normalizeState(body.state || DEFAULT_STATE);
+      const state = cleanupTrash(normalizeState(body.state || DEFAULT_STATE));
       writeState(state);
       mirrorReadableSheets(state);
       return jsonResponse({ ok: true, state });
@@ -46,6 +60,51 @@ function doPost(event) {
   } catch (error) {
     return jsonResponse({ ok: false, error: String(error && error.message ? error.message : error) }, 500);
   }
+}
+
+function loginServer(password) {
+  assertAppPassword(password);
+  const token = Utilities.getUuid();
+  CacheService.getScriptCache().put(sessionKey(token), '1', SESSION_TTL_SECONDS);
+  return { token };
+}
+
+function getStateServer(token) {
+  assertSession(token);
+  setupWorkbook();
+  const state = cleanupTrash(readState());
+  writeState(state);
+  mirrorReadableSheets(state);
+  return state;
+}
+
+function saveStateServer(token, state) {
+  assertSession(token);
+  setupWorkbook();
+  const clean = cleanupTrash(normalizeState(state || DEFAULT_STATE));
+  writeState(clean);
+  mirrorReadableSheets(clean);
+  return clean;
+}
+
+function emptyTrashServer(token, password) {
+  assertSession(token);
+  assertAppPassword(password);
+  setupWorkbook();
+  const state = readState();
+  state.documents = (state.documents || []).filter((document) => !document.deletedAt);
+  state.activity = [
+    {
+      id: `act_${Utilities.getUuid()}`,
+      action: 'trash_emptied',
+      details: {},
+      createdAt: new Date().toISOString()
+    },
+    ...(state.activity || [])
+  ].slice(0, 120);
+  writeState(state);
+  mirrorReadableSheets(state);
+  return state;
 }
 
 function setupWorkbook() {
@@ -153,11 +212,40 @@ function normalizeState(state) {
   };
 }
 
+function cleanupTrash(state) {
+  const cutoff = Date.now() - TRASH_TTL_MS;
+  return {
+    ...state,
+    documents: (state.documents || []).filter((document) => {
+      if (!document.deletedAt) return true;
+      return new Date(document.deletedAt).getTime() > cutoff;
+    })
+  };
+}
+
 function assertSecret(secret) {
   const expected = PropertiesService.getScriptProperties().getProperty('REGISTRO_VIVO_SECRET') || DEFAULT_SECRET;
   if (secret !== expected) {
     throw new Error('invalid_secret');
   }
+}
+
+function assertAppPassword(password) {
+  const expected = PropertiesService.getScriptProperties().getProperty('REGISTRO_VIVO_PASSWORD') || DEFAULT_APP_PASSWORD;
+  if (password !== expected) {
+    throw new Error('invalid_password');
+  }
+}
+
+function assertSession(token) {
+  if (!token || !CacheService.getScriptCache().get(sessionKey(token))) {
+    throw new Error('unauthorized');
+  }
+  CacheService.getScriptCache().put(sessionKey(token), '1', SESSION_TTL_SECONDS);
+}
+
+function sessionKey(token) {
+  return `session:${token}`;
 }
 
 function jsonResponse(payload, statusCode) {

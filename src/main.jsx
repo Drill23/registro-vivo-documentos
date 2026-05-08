@@ -34,6 +34,25 @@ const emptyState = {
   activity: []
 };
 
+function hasAppsScriptBridge() {
+  return Boolean(window.google?.script?.run);
+}
+
+function parseBody(options = {}) {
+  if (!options.body) return {};
+  if (typeof options.body === 'string') return JSON.parse(options.body);
+  return options.body;
+}
+
+function runAppsScript(functionName, ...args) {
+  return new Promise((resolve, reject) => {
+    const runner = window.google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler((error) => reject(new Error(error?.message || String(error))));
+    runner[functionName](...args);
+  });
+}
+
 function uid(prefix) {
   return `${prefix}_${crypto.randomUUID()}`;
 }
@@ -57,6 +76,15 @@ function isComplete(doc) {
 }
 
 async function api(path, options = {}) {
+  if (hasAppsScriptBridge()) {
+    const body = parseBody(options);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (path === '/api/login') return runAppsScript('loginServer', body.password);
+    if (path === '/api/state' && (!options.method || options.method === 'GET')) return runAppsScript('getStateServer', token);
+    if (path === '/api/state' && options.method === 'PUT') return runAppsScript('saveStateServer', token, body.state);
+    if (path === '/api/trash' && options.method === 'DELETE') return runAppsScript('emptyTrashServer', token, body.password);
+  }
+
   const token = localStorage.getItem(TOKEN_KEY);
   const response = await fetch(path, {
     ...options,
@@ -116,6 +144,8 @@ function App() {
   const [trashPasswordOpen, setTrashPasswordOpen] = useState(false);
   const saveTimer = useRef(null);
   const firstLoad = useRef(true);
+  const hasLocalChanges = useRef(false);
+  const changeVersion = useRef(0);
 
   const selected = useMemo(
     () => state.documents.find((doc) => doc.id === selectedId) || state.documents.find((doc) => !doc.deletedAt),
@@ -150,10 +180,12 @@ function App() {
       if (!token) return;
       try {
         const remote = await api('/api/state');
+        hasLocalChanges.current = false;
         setState(remote);
         setSyncMode('sincronizado');
       } catch {
         const local = readLocalState();
+        hasLocalChanges.current = false;
         setState(local);
         setSyncMode('local');
       } finally {
@@ -164,16 +196,20 @@ function App() {
   }, [token]);
 
   useEffect(() => {
-    if (!token || firstLoad.current) return;
+    if (!token || firstLoad.current || !hasLocalChanges.current) return;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
+      const versionAtSave = changeVersion.current;
       try {
         const remote = await api('/api/state', {
           method: 'PUT',
           body: JSON.stringify({ state })
         });
-        setState(remote);
-        setSyncMode('sincronizado');
+        if (changeVersion.current === versionAtSave) {
+          hasLocalChanges.current = false;
+          setState(remote);
+          setSyncMode('sincronizado');
+        }
       } catch {
         writeLocalState(state);
         setSyncMode('local');
@@ -182,7 +218,25 @@ function App() {
     return () => clearTimeout(saveTimer.current);
   }, [state, token]);
 
+  useEffect(() => {
+    if (!token) return undefined;
+    const interval = setInterval(async () => {
+      if (hasLocalChanges.current) return;
+      try {
+        const remote = await api('/api/state');
+        hasLocalChanges.current = false;
+        setState(remote);
+        setSyncMode('sincronizado');
+      } catch {
+        setSyncMode((current) => (current === 'sincronizado' ? 'local' : current));
+      }
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   const commit = useCallback((producer, actionLabel, details) => {
+    hasLocalChanges.current = true;
+    changeVersion.current += 1;
     setState((current) => {
       setHistory((items) => [current, ...items].slice(0, 30));
       setFuture([]);
@@ -207,6 +261,7 @@ function App() {
         if (password === 'admin') {
           localStorage.setItem(TOKEN_KEY, 'local-demo');
           setToken('local-demo');
+          hasLocalChanges.current = false;
           setState(readLocalState());
           setSyncMode('local');
           firstLoad.current = false;
@@ -224,6 +279,8 @@ function App() {
 
   function undo() {
     if (!history.length) return;
+    hasLocalChanges.current = true;
+    changeVersion.current += 1;
     setFuture((items) => [state, ...items].slice(0, 30));
     setState(history[0]);
     setHistory((items) => items.slice(1));
@@ -231,6 +288,8 @@ function App() {
 
   function redo() {
     if (!future.length) return;
+    hasLocalChanges.current = true;
+    changeVersion.current += 1;
     setHistory((items) => [state, ...items].slice(0, 30));
     setState(future[0]);
     setFuture((items) => items.slice(1));
@@ -294,6 +353,7 @@ function App() {
       body: JSON.stringify({ password: passwordValue })
     })
       .then((remote) => {
+        hasLocalChanges.current = false;
         setState(remote);
         setTrashPasswordOpen(false);
       })

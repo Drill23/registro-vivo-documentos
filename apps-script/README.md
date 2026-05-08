@@ -1,29 +1,25 @@
-# Registro Vivo - Google Sheets API
+# Registro Vivo - Google Apps Script
 
-Este script transforma uma planilha Google em banco de dados do Registro Vivo.
+Este script transforma uma planilha Google em banco de dados e tambem hospeda o app Registro Vivo pelo proprio Google Apps Script.
 
-## Como instalar
+## Como publicar
 
-1. Crie uma planilha no Google Sheets chamada `Registro Vivo - Banco de Dados`.
-2. Na planilha, abra `Extensoes > Apps Script`.
-3. Cole o conteudo de `Code.gs`.
-4. Em `Project Settings > Script Properties`, adicione:
-   - `REGISTRO_VIVO_SECRET`: use uma senha longa. Para teste pode ser `admin`.
-5. Execute manualmente a funcao `setupWorkbook` uma vez e autorize.
-6. Clique em `Deploy > New deployment`.
-7. Tipo: `Web app`.
-8. Execute as: `Me`.
-9. Who has access: `Anyone with the link`.
-10. Copie a URL do Web App.
-
-## Como ligar no servidor
-
-No ambiente onde o app Node estiver rodando, defina:
+Este diretorio ja esta preparado para `clasp`. Para gerar a tela final e enviar para o Apps Script:
 
 ```bash
-SHEETS_WEB_APP_URL=https://script.google.com/macros/s/.../exec
-SHEETS_SECRET=admin
-APP_PASSWORD=admin
+npm run build:apps-script
+cd apps-script
+npx @google/clasp push --force
+npx @google/clasp deploy -d "Registro Vivo"
 ```
 
-O app continua respeitando a lixeira e a regra de limpeza. A planilha recebe o estado completo em `State` e espelhos legiveis nas abas `Documents`, `Tasks` e `Activity`.
+O deploy precisa ficar como Web App, executando como a pessoa que publicou e com acesso `Anyone with the link`.
+
+## Estrutura da planilha
+
+- `State`: guarda o JSON completo usado pelo app.
+- `Documents`: espelho legivel dos documentos.
+- `Tasks`: espelho legivel das alteracoes e pendencias.
+- `Activity`: historico das ultimas acoes.
+
+O app continua respeitando a lixeira protegida por senha e a regra de limpeza automatica depois de 30 dias.

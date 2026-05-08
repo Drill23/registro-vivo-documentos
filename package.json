@@ -8,6 +8,7 @@
     "client": "vite --host 0.0.0.0",
     "server": "node server/index.js",
     "build": "vite build",
+    "build:apps-script": "npm run build && node scripts/build-apps-script.mjs",
     "preview": "APP_PASSWORD=admin node server/index.js",
     "share": "cloudflared tunnel --url http://127.0.0.1:4174",
     "lint": "eslint ."

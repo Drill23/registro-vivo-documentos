@@ -26,25 +26,30 @@ npm run dev
 
 Abra `http://localhost:5173`.
 
-## Como funciona o armazenamento
+## Como funciona o armazenamento compartilhado
 
-Quando o servidor Node esta rodando, os dados ficam no arquivo `data/registro-vivo.json`.
+A versao compartilhada roda dentro do Google Apps Script e usa uma planilha Google como banco de dados. Isso permite que duas pessoas abram o mesmo link e vejam as mesmas atualizacoes, sem depender de um computador local ligado.
 
-Para duas pessoas usarem o mesmo banco sem depender do computador de uma delas, configure o modo Google Sheets:
+A planilha guarda o estado completo na aba `State` e tambem espelha dados legiveis nas abas `Documents`, `Tasks` e `Activity`. A lixeira continua protegida por senha e itens movidos para la sao limpos automaticamente depois de 30 dias.
 
-1. Abra `apps-script/README.md`.
-2. Crie a planilha e publique o Apps Script como Web App.
-3. Configure o servidor com:
+Para atualizar a versao publicada no Apps Script:
 
 ```bash
-SHEETS_WEB_APP_URL=https://script.google.com/macros/s/.../exec
-SHEETS_SECRET=admin
-APP_PASSWORD=admin
+npm run build:apps-script
+cd apps-script
+npx @google/clasp push --force
+npx @google/clasp deploy -d "Registro Vivo"
 ```
 
-Nesse modo, o Google Sheets vira a fonte principal de dados. A lixeira e a limpeza continuam sendo controladas pelo app.
+Se a interface for aberta fora do Apps Script e sem servidor Node, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre voce e a Maria.
 
-Se a interface for aberta sem servidor, ela entra em modo local e salva no navegador. Esse modo serve para demonstracao, mas nao sincroniza entre voce e a Maria.
+## Como funciona o modo local
+
+Quando o servidor Node esta rodando, os dados ficam no arquivo `data/registro-vivo.json`. Ele ainda pode ser usado para desenvolvimento local:
+
+```bash
+APP_PASSWORD=admin npm run preview
+```
 
 ## Publicacao
 
