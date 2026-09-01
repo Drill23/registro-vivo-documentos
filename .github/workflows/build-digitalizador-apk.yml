@@ -2,7 +2,8 @@ name: Build Digitalizador APK
 on:
   push:
     branches: [tmp-digitalizador-pdf-build]
-    paths: ['android-scanner/**', '.github/workflows/build-digitalizador-apk.yml']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   build:
